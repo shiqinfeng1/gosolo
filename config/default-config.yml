@@ -1,0 +1,8 @@
+config-file: "./default-config.yml"
+
+infrastructure1-config:
+  networking-connection-pruning: true
+  
+infrastructure2-config:
+  received-message-cache-size: 10e4
+  
