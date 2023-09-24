@@ -3,10 +3,10 @@
 
 ####################################
 ## (1) Setup the build environment
-FROM golang:1.20-bullseye AS build-setup
+FROM golang:1.21.1-bullseye AS build-setup
 
-RUN apt-get update
-RUN apt-get -y install cmake zip
+RUN apt-get update && apt-get upgrade
+RUN apt-get install cmake zip
 
 ## (2) Setup crypto dependencies
 FROM build-setup AS build-env
@@ -26,7 +26,7 @@ COPY . .
 RUN --mount=type=cache,sharing=locked,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=secret,id=git_creds,dst=/root/.netrc \
-    make crypto_setup_gopath
+    make crypto_setup
 
 ####################################
 ## (3) Build the production app binary
@@ -44,7 +44,7 @@ RUN --mount=type=cache,sharing=locked,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=secret,id=git_creds,dst=/root/.netrc \
     CGO_ENABLED=1 GOOS=linux go build --tags "${TAGS}" -ldflags "-extldflags -static \
-    -X 'github.com/onflow/flow-go/cmd/build.commit=${COMMIT}' -X  'github.com/onflow/flow-go/cmd/build.semver=${VERSION}'" \
+    -X 'gosolo/cmd/build.commit=${COMMIT}' -X  'gosolo/cmd/build.semver=${VERSION}'" \
     -o ./app ${TARGET}
 
 RUN chmod a+x /app/app
@@ -65,7 +65,7 @@ RUN --mount=type=ssh \
     --mount=type=cache,sharing=locked,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=1 GOOS=linux go build --tags "relic,netgo" -ldflags "-extldflags -static \
-    -X 'github.com/onflow/flow-go/cmd/build.commit=${COMMIT}' -X  'github.com/onflow/flow-go/cmd/build.semver=${VERSION}'" \
+    -X 'gosolo/cmd/build.commit=${COMMIT}' -X  'gosolo/cmd/build.semver=${VERSION}'" \
     -gcflags="all=-N -l" -o ./app ${TARGET}
 
 RUN chmod a+x /app/app

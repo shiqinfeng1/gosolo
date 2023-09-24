@@ -38,9 +38,23 @@ K8S_YAMLS_LOCATION_STAGING=./k8s/staging
 export CONTAINER_REGISTRY := gcr.io/flow-container-registry
 export DOCKER_BUILDKIT := 1
 
+.PHONY: check-go-version
+check-go-version:
+	@bash -c '\
+		MINGOVERSION=1.18; \
+		function ver { printf "%d%03d%03d%03d" $$(echo "$$1" | tr . " "); }; \
+		GOVER=$$(go version | sed -rne "s/.* go([0-9.]+).*/\1/p" ); \
+		if [ "$$(ver $$GOVER)" -lt "$$(ver $$MINGOVERSION)" ]; then \
+			echo "go $$GOVER is too old. flow-go only supports go $$MINGOVERSION and up."; \
+			exit 1; \
+		else \
+			echo "go $$GOVER is matched for build ."; \
+		fi; \
+		'
+
 # setup the crypto package under the GOPATH: needed to test packages importing flow-go/crypto
-.PHONY: crypto_setup_gopath
-crypto_setup_gopath:
+.PHONY: crypto_setup
+crypto_setup:
 	bash crypto_setup.sh
 
 .PHONY: cmd/app1
@@ -58,14 +72,14 @@ unittest-main:
 .PHONY: install-mock-generators
 install-mock-generators:
 	cd ${GOPATH}; \
-    go install github.com/vektra/mockery/v2; \
-    go install github.com/golang/mock/mockgen;
+    go install github.com/vektra/mockery/v2@latest; \
+    go install github.com/golang/mock/mockgen@latest;
 
 .PHONY: install-tools
-install-tools: crypto_setup_gopath check-go-version install-mock-generators
+install-tools: crypto_setup check-go-version install-mock-generators
 	cd ${GOPATH}; \
-	go install github.com/golang/protobuf/protoc-gen-go; \
-	go install github.com/uber/prototool/cmd/prototool; \
+	go install github.com/golang/protobuf/protoc-gen-go@latest; \
+	go install github.com/uber/prototool/cmd/prototool@latest; \
 	go install github.com/gogo/protobuf/protoc-gen-gofast@latest; \
 	go install golang.org/x/tools/cmd/stringer@master;
 
@@ -90,7 +104,7 @@ go-math-rand-check:
     fi
 
 .PHONY: code-sanity-check
-code-sanity-check: go-math-rand-check emulator-norelic-check
+code-sanity-check: go-math-rand-check 
 
 .PHONY: test
 test: verify-mocks unittest-main
@@ -120,7 +134,7 @@ generate-openapi:
 	go fmt ./engine/access/rest/models
 
 .PHONY: generate
-generate: generate-proto generate-mocks generate-fvm-env-wrappers
+generate: generate-proto generate-mocks 
 
 .PHONY: generate-proto
 generate-proto:
@@ -145,8 +159,6 @@ tidy:
 	go mod tidy -v
 	cd integration; go mod tidy -v
 	cd crypto; go mod tidy -v
-	cd cmd/testclient; go mod tidy -v
-	cd insecure; go mod tidy -v
 	git diff --exit-code
 
 .PHONY: lint
@@ -165,7 +177,7 @@ ci: install-tools test
 
 # Runs integration tests
 .PHONY: ci-integration
-ci-integration: crypto_setup_gopath
+ci-integration: crypto_setup
 	$(MAKE) -C integration ci-integration-test
 
 # Runs benchmark tests
@@ -198,17 +210,17 @@ docker-ci-integration:
 		-w "/go/flow" "$(CONTAINER_REGISTRY)/golang-cmake:v0.0.7" \
 		make ci-integration
 
-.PHONY: docker-build-consensus
-docker-build-consensus:
-	docker build -f cmd/Dockerfile  --build-arg TARGET=./cmd/consensus --build-arg COMMIT=$(COMMIT)  --build-arg VERSION=$(IMAGE_TAG) --build-arg GOARCH=$(GOARCH) --target production \
+.PHONY: docker-build-app1
+docker-build-app1:
+	docker build -f cmd/Dockerfile  --build-arg TARGET=./cmd/app1 --build-arg COMMIT=$(COMMIT)  --build-arg VERSION=$(IMAGE_TAG) --build-arg GOARCH=$(GOARCH) --target production \
 		--secret id=git_creds,env=GITHUB_CREDS --build-arg GOPRIVATE=$(GOPRIVATE) \
 		--label "git_commit=${COMMIT}" --label "git_tag=${IMAGE_TAG}" \
-		-t "$(CONTAINER_REGISTRY)/consensus:latest" -t "$(CONTAINER_REGISTRY)/consensus:$(SHORT_COMMIT)" -t "$(CONTAINER_REGISTRY)/consensus:$(IMAGE_TAG)"  .
+		-t "$(CONTAINER_REGISTRY)/app1:latest" -t "$(CONTAINER_REGISTRY)/app1:$(SHORT_COMMIT)" -t "$(CONTAINER_REGISTRY)/app1:$(IMAGE_TAG)"  .
 
-.PHONY: docker-build-consensus-debug
-docker-build-consensus-debug:
-	docker build -f cmd/Dockerfile  --build-arg TARGET=./cmd/consensus --build-arg COMMIT=$(COMMIT)  --build-arg VERSION=$(IMAGE_TAG) --build-arg GOARCH=$(GOARCH) --target debug \
-		-t "$(CONTAINER_REGISTRY)/consensus-debug:latest" -t "$(CONTAINER_REGISTRY)/consensus-debug:$(SHORT_COMMIT)" -t "$(CONTAINER_REGISTRY)/consensus-debug:$(IMAGE_TAG)" .
+.PHONY: docker-build-app1-debug
+docker-build-app1-debug:
+	docker build -f cmd/Dockerfile  --build-arg TARGET=./cmd/app1 --build-arg COMMIT=$(COMMIT)  --build-arg VERSION=$(IMAGE_TAG) --build-arg GOARCH=$(GOARCH) --target debug \
+		-t "$(CONTAINER_REGISTRY)/app1-debug:latest" -t "$(CONTAINER_REGISTRY)/app1-debug:$(SHORT_COMMIT)" -t "$(CONTAINER_REGISTRY)/app1-debug:$(IMAGE_TAG)" .
 
 
 PHONY: tool-bootstrap
@@ -219,20 +231,20 @@ PHONY: tool-transit
 tool-transit: docker-build-bootstrap-transit
 	docker container create --name transit $(CONTAINER_REGISTRY)/bootstrap-transit:latest;docker container cp transit:/bin/app ./transit;docker container rm transit
 
-.PHONY: docker-build-flow
-docker-build-flow: docker-build-collection docker-build-consensus docker-build-execution docker-build-verification docker-build-access docker-build-observer docker-build-ghost
+.PHONY: docker-build-app
+docker-build-app: docker-build-app1 
 
-.PHONY: docker-push-execution
-docker-push-execution:
-	docker push "$(CONTAINER_REGISTRY)/execution:$(SHORT_COMMIT)"
-	docker push "$(CONTAINER_REGISTRY)/execution:$(IMAGE_TAG)"
+.PHONY: docker-push-app1
+docker-push-app1:
+	docker push "$(CONTAINER_REGISTRY)/app1:$(SHORT_COMMIT)"
+	docker push "$(CONTAINER_REGISTRY)/app1:$(IMAGE_TAG)"
 
-.PHONY: docker-push-flow
-docker-push-flow: docker-push-execution 
+.PHONY: docker-push-app
+docker-push-app: docker-push-app1 
 
-.PHONY: docker-run-consensus
-docker-run-consensus:
-	docker run -p 8080:8080 -p 3569:3569 "$(CONTAINER_REGISTRY)/consensus:latest" --nodeid 1234567890123456789012345678901234567890123456789012345678901234 --entries consensus-1234567890123456789012345678901234567890123456789012345678901234@localhost:3569=1000
+.PHONY: docker-run-app1
+docker-run-app1:
+	docker run -p 8080:8080 -p 3569:3569 "$(CONTAINER_REGISTRY)/app1:latest" --nodeid 1234567890123456789012345678901234567890123456789012345678901234 --entries app1-1234567890123456789012345678901234567890123456789012345678901234@localhost:3569=1000
 
 
 PHONY: docker-all-tools
@@ -246,19 +258,6 @@ docker-build-util:
 PHONY: tool-util
 tool-util: docker-build-util
 	docker container create --name util $(CONTAINER_REGISTRY)/util:latest;docker container cp util:/bin/app ./util;docker container rm util
-
-
-.PHONY: check-go-version
-check-go-version:
-	@bash -c '\
-		MINGOVERSION=1.18; \
-		function ver { printf "%d%03d%03d%03d" $$(echo "$$1" | tr . " "); }; \
-		GOVER=$$(go version | sed -rne "s/.* go([0-9.]+).*/\1/p" ); \
-		if [ "$$(ver $$GOVER)" -lt "$$(ver $$MINGOVERSION)" ]; then \
-			echo "go $$GOVER is too old. flow-go only supports go $$MINGOVERSION and up."; \
-			exit 1; \
-		fi; \
-		'
 
 #----------------------------------------------------------------------
 # CD COMMANDS
@@ -292,6 +291,6 @@ monitor-rollout:
 	kconfig=$$(uuidgen); \
 	echo "$$KUBECONFIG_STAGING" > $$kconfig; \
 	kubectl --kubeconfig=$$kconfig rollout status statefulsets.apps flow-collection-node-v1; \
-	kubectl --kubeconfig=$$kconfig rollout status statefulsets.apps flow-consensus-node-v1; \
+	kubectl --kubeconfig=$$kconfig rollout status statefulsets.apps flow-app1-node-v1; \
 	kubectl --kubeconfig=$$kconfig rollout status statefulsets.apps flow-execution-node-v1; \
 	kubectl --kubeconfig=$$kconfig rollout status statefulsets.apps flow-verification-node-v1
