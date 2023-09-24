@@ -3,7 +3,7 @@
 package component
 
 import (
-	component "github.com/onflow/flow-go/module/component"
+	component "gosolo/module/component"
 	mock "github.com/stretchr/testify/mock"
 )
 

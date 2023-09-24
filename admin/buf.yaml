@@ -2,9 +2,3 @@ version: v1beta1
 name: buf.build/shiqifeng1/gosolo
 deps:
   - buf.build/googleapis/googleapis
-breaking:
-  use:
-    - FILE
-lint:
-  use:
-    - DEFAULT

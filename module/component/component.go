@@ -9,7 +9,7 @@ import (
 
 	"go.uber.org/atomic"
 
-	"github.com/onflow/flow-go/module/util"
+	"gosolo/module/util"
 )
 
 // ErrComponentShutdown is returned by a component which has already been shut down.

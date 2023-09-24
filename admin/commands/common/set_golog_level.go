@@ -8,8 +8,8 @@ import (
 	golog "github.com/ipfs/go-log/v2"
 	"github.com/rs/zerolog/log"
 
-	"github.com/onflow/flow-go/admin"
-	"github.com/onflow/flow-go/admin/commands"
+	"gosolo/admin"
+	"gosolo/admin/commands"
 )
 
 var _ commands.AdminCommand = (*SetGologLevelCommand)(nil)

@@ -55,10 +55,11 @@
       "type": "object",
       "properties": {
         "commandName": {
-          "type": "string"
+          "type": "string",
+          "title": "Name of the command to run"
         },
         "data": {
-          "type": "object"
+          "title": "Arguments to pass to the command"
         }
       },
       "title": "RunCommandRequest represents an admin command with arguments"
@@ -67,7 +68,7 @@
       "type": "object",
       "properties": {
         "output": {
-          "type": "object"
+          "title": "The command output"
         }
       },
       "title": "RunCommandResponse represents an admin command response"
@@ -102,6 +103,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }

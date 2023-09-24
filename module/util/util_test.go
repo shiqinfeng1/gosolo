@@ -12,8 +12,8 @@ import (
 
 	realmodule "gosolo/module"
 
-	module "github.com/onflow/flow-go/module/mock"
-	"github.com/onflow/flow-go/utils/unittest"
+	module "gosolo/module/mock"
+	"gosolo/utils/unittest"
 )
 
 // TestAllReady tests that AllReady closes its returned Ready channel only once

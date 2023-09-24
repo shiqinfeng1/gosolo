@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/onflow/flow-go/module/component"
-	"github.com/onflow/flow-go/module/irrecoverable"
+	"gosolo/module/component"
+	"gosolo/module/irrecoverable"
 )
 
 var ErrFatal = errors.New("fatal")

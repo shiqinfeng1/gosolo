@@ -12,8 +12,9 @@
       3. 生成app构造器实例：`AppBuilder`
    2. (可选)添加额外的命令行参数配置
 2. 初始化
-   1. 通过构造器AppBuilder的Logger打印版本信息：`PrintBuildVersionDetails`
+   1. 通过构造器AppBuilder的Logger打印版本信息：`PrintBuildVersionDetails(...)`
    2. 导出viper中的配置到 `YamlConfig`  (在init时已经加载了默认配置)
+   3. 映射和解析命令行参数： `InitializePFlagSet(...)`
 3. 添加组件和模块
 4. 启动允许
 

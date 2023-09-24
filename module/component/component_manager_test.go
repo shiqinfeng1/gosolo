@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
-	"github.com/onflow/flow-go/module/component"
-	"github.com/onflow/flow-go/module/irrecoverable"
-	"github.com/onflow/flow-go/module/util"
-	"github.com/onflow/flow-go/utils/unittest"
+	"gosolo/module/component"
+	"gosolo/module/irrecoverable"
+	"gosolo/module/util"
+	"gosolo/utils/unittest"
 )
 
 const CHANNEL_CLOSE_LATENCY_ALLOWANCE = 25 * time.Millisecond

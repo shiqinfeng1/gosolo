@@ -3,8 +3,9 @@ package common
 import (
 	"context"
 
-	"github.com/onflow/flow-go/admin"
-	"github.com/onflow/flow-go/admin/commands"
+	"gosolo/admin"
+	"gosolo/admin/commands"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

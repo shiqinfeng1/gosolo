@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/onflow/flow-go/admin/commands"
+	"gosolo/admin/commands"
 )
 
 type BuilderFunc func(nodeConfig *NodeConfig) error
@@ -87,13 +87,6 @@ type NodeBuilder interface {
 	// PostInit functions run after the protocol state has been initialized but before any other modules or components
 	// are initialized
 	PostInit(f BuilderFunc) NodeBuilder
-
-	// RegisterBadgerMetrics registers all badger related metrics
-	RegisterBadgerMetrics() error
-
-	// ValidateFlags sets any custom validation rules for the command line flags,
-	// for example where certain combinations aren't allowed
-	ValidateFlags(func() error) NodeBuilder
 }
 
 // DependencyList is a slice of ReadyDoneAware implementations that are used by DependableComponent

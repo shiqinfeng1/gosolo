@@ -2,8 +2,7 @@ package commands
 
 import (
 	"context"
-
-	"github.com/onflow/flow-go/admin"
+	"gosolo/admin"
 )
 
 // AdminCommand defines the interface expected for admin command handlers.

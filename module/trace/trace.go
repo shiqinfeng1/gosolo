@@ -14,8 +14,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
-
-	"github.com/onflow/flow-go/model/flow"
 )
 
 const DefaultEntityCacheSize = 1000
@@ -127,87 +125,6 @@ func (t *Tracer) Done() <-chan struct{} {
 	return done
 }
 
-func (t *Tracer) startEntitySpan(
-	ctx context.Context,
-	entityID flow.Identifier,
-	entityType string,
-	spanName SpanName,
-	opts ...trace.SpanStartOption,
-) (
-	trace.Span,
-	context.Context,
-) {
-	if !t.ShouldSample(entityID) {
-		return NoopSpan, ctx
-	}
-
-	ctx, rootSpan := t.entityRootSpan(ctx, entityID, entityType)
-	return t.StartSpanFromParent(rootSpan, spanName, opts...), ctx
-}
-
-// entityRootSpan returns the root span for the given entity from the cache
-// and if not exist it would construct it and cache it and return it
-// This should be used mostly for the very first span created for an entity on the service
-func (t *Tracer) entityRootSpan(
-	ctx context.Context,
-	entityID flow.Identifier,
-	entityType string,
-) (
-	context.Context,
-	trace.Span,
-) {
-	if c, ok := t.spanCache.Get(entityID); ok {
-		span := c.(trace.Span)
-		return trace.ContextWithSpan(ctx, span), span
-	}
-
-	traceID := (*trace.TraceID)(entityID[:16])
-	spanConfig := trace.SpanContextConfig{
-		TraceID:    *traceID,
-		TraceFlags: trace.TraceFlags(0).WithSampled(true),
-	}
-	ctx = trace.ContextWithSpanContext(ctx, trace.NewSpanContext(spanConfig))
-	ctx, span := t.tracer.Start(ctx, string(entityType))
-
-	span.SetAttributes(
-		attribute.String("entity_id", entityID.String()),
-		attribute.String("chainID", t.chainID),
-	)
-	t.spanCache.Add(entityID, span)
-
-	span.End() // end span right away
-	return ctx, span
-}
-
-func (t *Tracer) BlockRootSpan(blockID flow.Identifier) trace.Span {
-	_, span := t.entityRootSpan(context.Background(), blockID, EntityTypeBlock)
-	return span
-}
-
-func (t *Tracer) StartBlockSpan(
-	ctx context.Context,
-	blockID flow.Identifier,
-	spanName SpanName,
-	opts ...trace.SpanStartOption,
-) (
-	trace.Span,
-	context.Context,
-) {
-	return t.startEntitySpan(ctx, blockID, EntityTypeBlock, spanName, opts...)
-}
-
-func (t *Tracer) StartCollectionSpan(
-	ctx context.Context,
-	collectionID flow.Identifier,
-	spanName SpanName,
-	opts ...trace.SpanStartOption,
-) (
-	trace.Span,
-	context.Context,
-) {
-	return t.startEntitySpan(ctx, collectionID, EntityTypeCollection, spanName, opts...)
-}
-
 func (t *Tracer) StartSpanFromContext(
 	ctx context.Context,
 	operationName SpanName,
@@ -232,23 +149,6 @@ func (t *Tracer) StartSpanFromParent(
 	ctx := trace.ContextWithSpan(context.Background(), parentSpan)
 	_, span := t.tracer.Start(ctx, string(operationName), opts...)
 	return span
-}
-
-func (t *Tracer) ShouldSample(entityID flow.Identifier) bool {
-	return entityID.IsSampled(t.sensitivity)
-}
-
-func (t *Tracer) StartSampledSpanFromParent(
-	parentSpan trace.Span,
-	entityID flow.Identifier,
-	operationName SpanName,
-	opts ...trace.SpanStartOption,
-) trace.Span {
-	if !t.ShouldSample(entityID) {
-		return NoopSpan
-	}
-
-	return t.StartSpanFromParent(parentSpan, operationName, opts...)
 }
 
 func (t *Tracer) RecordSpanFromParent(

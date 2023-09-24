@@ -39,6 +39,12 @@ func InitializePFlagSet(flags *pflag.FlagSet, baseConfig *BaseConfig, config *Ya
 	flags.StringVar(&baseConfig.config1, "nodeid", defaultConfig.config1, "identity of our node")
 	flags.StringVarP(&baseConfig.config2, "bootstrapdir", "b", defaultConfig.config2, "path to the bootstrap directory")
 	flags.Uint32Var(&baseConfig.config3, "debug-log-limit", defaultConfig.config3, "max number of debug/trace log events per second")
-	flags.BoolVar(&baseConfig.profilerConfig.Enabled, "profiler-enabled", defaultConfig.profilerConfig.Enabled, "whether to enable the auto-profiler")
+	flags.BoolVar(&baseConfig.ProfilerConfig.Enabled, "profiler-enabled", defaultConfig.ProfilerConfig.Enabled, "whether to enable the auto-profiler")
+
+	flags.StringVar(&baseConfig.AdminAddr, "admin-addr", defaultConfig.AdminAddr, "address to bind on for admin HTTP server")
+	flags.StringVar(&baseConfig.AdminCert, "admin-cert", defaultConfig.AdminCert, "admin cert file (for TLS)")
+	flags.StringVar(&baseConfig.AdminKey, "admin-key", defaultConfig.AdminKey, "admin key file (for TLS)")
+	flags.StringVar(&baseConfig.AdminClientCAs, "admin-client-certs", defaultConfig.AdminClientCAs, "admin client certs (for mutual TLS)")
+	flags.UintVar(&baseConfig.AdminMaxMsgSize, "admin-max-response-size", defaultConfig.AdminMaxMsgSize, "admin server max response size in bytes")
 
 }

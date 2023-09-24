@@ -61,12 +61,12 @@ func (fc *YamlConfig) Validate() error {
 //	*YamlConfig: an instance of the network configuration fully initialized to the default values set in the config file
 //	error: if there is any error encountered while initializing the configuration, all errors are considered irrecoverable.
 func DefaultConfig() (*YamlConfig, error) {
-	var flowConfig YamlConfig
-	err := Unmarshall(&flowConfig)
+	var yamlConfig YamlConfig
+	err := Unmarshall(&yamlConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshall the Flow config: %w", err)
 	}
-	return &flowConfig, nil
+	return &yamlConfig, nil
 }
 
 // BindPFlags 绑定配置文件和命令行参数，该函数在阐述被解析后执行 ，如果指定了--config-file 那么配置文件从指定的文件加载，再和命令行参数合并
@@ -100,8 +100,8 @@ func BindPFlags(c *YamlConfig, flags *pflag.FlagSet) (bool, error) {
 }
 
 // Unmarshall 把viper中的配置映射到结构体中
-func Unmarshall(flowConfig *YamlConfig) error {
-	err := conf.Unmarshal(flowConfig, func(decoderConfig *mapstructure.DecoderConfig) {
+func Unmarshall(yamlConfig *YamlConfig) error {
+	err := conf.Unmarshal(yamlConfig, func(decoderConfig *mapstructure.DecoderConfig) {
 		// enforce all fields are set on the YamlConfig struct
 		decoderConfig.ErrorUnset = true
 		// currently the entire flow configuration has not been moved to this package

@@ -4,14 +4,12 @@ import (
 	"context"
 	"gosolo/module/component"
 	"gosolo/module/irrecoverable"
+	"gosolo/module/util"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/rs/zerolog"
-
-	"github.com/onflow/flow-go/module/util"
-	"github.com/onflow/flow-go/utils/logging"
 )
 
 var _ component.Component = (*FlowNodeImp)(nil)
@@ -73,7 +71,7 @@ func (node *FlowNodeImp) Run() {
 		node.logger.Error().Err(err).Msg("error encountered during cleanup")
 	}
 
-	node.logger.Info().Msgf("%s node shutdown complete", node.BaseConfig.NodeRole)
+	node.logger.Info().Msgf("%s node shutdown complete", node.config.NodeRole)
 }
 
 // run starts the node and blocks until a SIGINT/SIGTERM is received or an error is encountered.
@@ -97,8 +95,7 @@ func (node *FlowNodeImp) run(ctx context.Context, shutdown context.CancelFunc) e
 		select {
 		case <-node.Ready():
 			node.logger.Info().
-				Hex("spork_id", logging.ID(node.SporkID)).
-				Msgf("%s node startup complete", node.BaseConfig.NodeRole)
+				Msgf("%s node startup complete", node.config.NodeRole)
 		case <-ctx.Done():
 		}
 	}()
@@ -118,7 +115,7 @@ func (node *FlowNodeImp) run(ctx context.Context, shutdown context.CancelFunc) e
 
 	// 3: Shut down
 	// Send shutdown signal to components
-	node.logger.Info().Msgf("%s node shutting down", node.BaseConfig.NodeRole)
+	node.logger.Info().Msgf("%s node shutting down", node.config.NodeRole)
 	shutdown()
 
 	// Block here until all components have stopped or an irrecoverable error is received.
