@@ -3,10 +3,10 @@
 
 ####################################
 ## (1) Setup the build environment
-FROM golang:1.21.1-bullseye AS build-setup
+FROM golang:1.20-bullseye AS build-setup
 
-RUN apt-get update && apt-get upgrade
-RUN apt-get install cmake zip
+RUN apt-get update 
+RUN apt-get install cmake zip -y
 
 ## (2) Setup crypto dependencies
 FROM build-setup AS build-env
