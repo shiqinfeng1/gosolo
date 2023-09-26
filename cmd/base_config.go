@@ -20,7 +20,7 @@ type NodeConfig struct {
 	config config.BaseConfig
 
 	// 基础设施的实例
-	ConfigManager     *updatable_configs.Manager
+	ConfigManager     *updatable_configs.Manager  // 可更新的配置管理器
 	Logger            zerolog.Logger
 	Tracer            module.Tracer
 	MetricsRegisterer prometheus.Registerer

@@ -6,13 +6,11 @@ import (
 	"sync"
 )
 
-// WARNING: The semantics of this interface will be changing in the near future, with
-// startup / shutdown capabilities being delegated to the Startable interface instead.
-// For more details, see https://github.com/onflow/flow-go/pull/1167
-//
+
 // ReadyDoneAware provides an easy interface to wait for module startup and shutdown.
 // Modules that implement this interface only support a single start-stop cycle, and
 // will not restart if Ready() is called again after shutdown has already commenced.
+// ReadyDoneAware用于管理等待一个模块的启动和关闭，并且不支持重启
 type ReadyDoneAware interface {
 	// Ready commences startup of the module, and returns a ready channel that is closed once
 	// startup has completed. Note that the ready channel may never close if errors are
@@ -20,6 +18,7 @@ type ReadyDoneAware interface {
 	// If shutdown has already commenced before this method is called for the first time,
 	// startup will not be performed and the returned channel will also never close.
 	// This should be an idempotent method.
+	// Ready 开始启动一个模块，并等待channel被关闭， 表示启动完成，如果启动失败，那么channel不会被关闭
 	Ready() <-chan struct{}
 
 	// Done commences shutdown of the module, and returns a done channel that is closed once

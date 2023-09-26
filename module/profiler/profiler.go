@@ -22,6 +22,8 @@ import (
 	pb "google.golang.org/genproto/googleapis/devtools/cloudprofiler/v2"
 )
 
+// Cloud Profiler 是一个对运行在googlecloud生产环境上应用的性能剖析器，是一个低开销的统计性能剖析器，性能数据将通过uploader上传到google的
+
 type timedProfileFunc func(io.Writer, time.Duration) error
 type profileDef struct {
 	profileName string
@@ -52,6 +54,7 @@ func New(log zerolog.Logger, uploader Uploader, cfg ProfilerConfig) (*AutoProfil
 	}
 
 	// add 50% jitter to the interval
+	// jitter的范围是 [0,n)
 	jitter := time.Duration(rand.Int63n(int64(cfg.Interval)))
 	interval := cfg.Interval/2 + jitter
 
