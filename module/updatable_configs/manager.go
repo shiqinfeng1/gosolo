@@ -9,28 +9,34 @@ import (
 
 // ErrAlreadyRegistered is returned when a config field is registered with a name
 // conflicting with an already registered config field.
+// 模块自定义错误
 var ErrAlreadyRegistered = fmt.Errorf("config name already registered")
 
 // ValidationError is returned by a config setter function (Set*ConfigFunc) when
 // the provided config field is invalid, and was not applied.
+// 模块错误类型封装
 type ValidationError struct {
 	Err error
 }
 
+// 封装error接口的方法
 func (err ValidationError) Error() string {
 	return err.Err.Error()
 }
 
+// 生成一个新的验证错误的实例
 func NewValidationErrorf(msg string, args ...any) ValidationError {
 	return ValidationError{
 		Err: fmt.Errorf(msg, args...),
 	}
 }
 
+// 自定义error匹配判断
 func IsValidationError(err error) bool {
 	return errors.As(err, &ValidationError{})
 }
 
+// 任意类型的set和get函数的定义
 type (
 	SetAnyConfigFunc func(any) error
 	GetAnyConfigFunc func() any
@@ -43,7 +49,8 @@ type (
 //  1. Add a new setter and getter type below
 //  2. Add a Register*Config method to the Registrar interface and Manager implementation below
 //  3. Add a TestManager_Register*Config test to the manager_test.go file.
-
+//
+// 具体类型的set和get函数的定义
 type (
 	// Set*ConfigFunc is a setter function for a single updatable config field.
 	// Returns ValidationError if the new config value is invalid.
@@ -59,7 +66,7 @@ type (
 	GetDurationConfigFunc func() time.Duration
 )
 
-// Field represents one dynamically configurable config field.
+// Field 代表一个动态的可配置的配置域.
 type Field struct {
 	// Name is the name of the config field, must be globally unique.
 	Name string
