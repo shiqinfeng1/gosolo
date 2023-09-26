@@ -3,7 +3,7 @@
 
 ####################################
 ## (1) Setup the build environment
-FROM golang:1.20-bullseye AS build-setup
+FROM dockerproxy.com/library/golang:1.20-bullseye AS build-setup
 
 RUN apt-get update 
 RUN apt-get install cmake zip -y
@@ -40,17 +40,21 @@ ARG TAGS="relic,netgo"
 
 # Keep Go's build cache between builds.
 # https://github.com/golang/go/issues/27719#issuecomment-514747274
+# 以静态链接的方式，使用c密码库: 
+# 1. 在代码中注释：// #cgo LDFLAGS: -L${SRCDIR}/relic/build/lib -l relic_s  
+# 2. 在编译选项中添加： -extldflags -static
+
 RUN --mount=type=cache,sharing=locked,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=secret,id=git_creds,dst=/root/.netrc \
-    CGO_ENABLED=1 GOOS=linux go build --tags "${TAGS}" -ldflags "-extldflags -static \
+    GOPROXY='https://goproxy.cn,direct' CGO_ENABLED=1 GOOS=linux go build --tags "${TAGS}" -ldflags "-extldflags -static \
     -X 'gosolo/cmd/build.commit=${COMMIT}' -X  'gosolo/cmd/build.semver=${VERSION}'" \
     -o ./app ${TARGET}
 
 RUN chmod a+x /app/app
 
 ## (4) Add the statically linked production binary to a distroless image
-FROM gcr.io/distroless/base-debian11 as production
+FROM gcr.dockerproxy.com/distroless/base-debian11 as production
 
 COPY --from=build-production /app/app /bin/app
 
