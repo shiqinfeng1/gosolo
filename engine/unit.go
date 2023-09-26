@@ -124,6 +124,7 @@ func (u *Unit) LaunchPeriodically(f func(), interval time.Duration, delay time.D
 //
 // The engine using the unit is responsible for defining these check functions
 // as required.
+// 当一系列指定的check完成后，关闭返回的channel
 func (u *Unit) Ready(checks ...func()) <-chan struct{} {
 	ready := make(chan struct{})
 	go func() {
