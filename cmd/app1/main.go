@@ -8,12 +8,13 @@ import (
 )
 
 func main() {
-
-	nodeBuilder := cmd.App("ghost")
+	// 生产一个节点构造器的实例
+	nodeBuilder := cmd.App("app1")
 	nodeBuilder.ExtraFlags(func(flags *pflag.FlagSet) {
 
 	})
 
+	// 初始化
 	if err := nodeBuilder.Initialize(); err != nil {
 		nodeBuilder.Logger.Fatal().Err(err).Send()
 	}

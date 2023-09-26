@@ -698,6 +698,7 @@ func (ab *AppBuilder) PostInit(f BuilderFunc) NodeBuilder {
 	return ab
 }
 
+// 以下是App的修改baseConfig的选项
 type Option func(*config.BaseConfig)
 
 func WithBindAddress(bindAddress string) Option {
@@ -719,6 +720,7 @@ func WithLogLevel(level string) Option {
 }
 
 // App creates a new Flow node builder with the given name.
+// opts 可以修改baseConfig
 func App(role string, opts ...Option) *AppBuilder {
 	config := config.DefaultBaseConfig()
 	config.NodeRole = role
@@ -729,7 +731,7 @@ func App(role string, opts ...Option) *AppBuilder {
 	builder := &AppBuilder{
 		NodeConfig: &NodeConfig{
 			config:                  *config,
-			Logger:                  zerolog.New(os.Stderr),
+			Logger:                  zerolog.New(os.Stderr), // 设置全局日志，使用zerolog， 输出到stderr
 			PeerManagerDependencies: NewDependencyList(),
 			ConfigManager:           updatable_configs.NewManager(),
 		},

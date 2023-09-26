@@ -37,7 +37,7 @@ func InitializePFlagSet(flags *pflag.FlagSet, baseConfig *BaseConfig, config *Ya
 
 	// bind configuration parameters
 	flags.StringVar(&baseConfig.config1, "nodeid", defaultConfig.config1, "identity of our node")
-	flags.StringVarP(&baseConfig.config2, "bootstrapdir", "b", defaultConfig.config2, "path to the bootstrap directory")
+	flags.StringVarP(&baseConfig.datadir, "bootstrapdir", "b", defaultConfig.datadir, "path to the bootstrap directory")
 	flags.Uint32Var(&baseConfig.config3, "debug-log-limit", defaultConfig.config3, "max number of debug/trace log events per second")
 	flags.BoolVar(&baseConfig.ProfilerConfig.Enabled, "profiler-enabled", defaultConfig.ProfilerConfig.Enabled, "whether to enable the auto-profiler")
 

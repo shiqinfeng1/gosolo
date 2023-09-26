@@ -91,6 +91,7 @@ type NodeBuilder interface {
 
 // DependencyList is a slice of ReadyDoneAware implementations that are used by DependableComponent
 // to define the list of dependencies that must be ready before starting the component.
+// 保存在启动组件之前的依赖组件
 type DependencyList struct {
 	components []module.ReadyDoneAware
 }
