@@ -11,11 +11,13 @@ import (
 )
 
 // Signaler sends the error out.
+// 通过channel报告err
 type Signaler struct {
 	errChan   chan error
 	errThrown *atomic.Bool
 }
 
+// 返回报告err的channel和报告器
 func NewSignaler() (*Signaler, <-chan error) {
 	errChan := make(chan error, 1)
 	return &Signaler{
@@ -28,6 +30,7 @@ func NewSignaler() (*Signaler, <-chan error) {
 // anywhere there's something connected to the error channel. It only sends
 // the first error it is called with to the error channel, and logs subsequent
 // errors as unhandled.
+// 抛出异常到channel， 并关闭channel
 func (s *Signaler) Throw(err error) {
 	defer runtime.Goexit()
 	if s.errThrown.CompareAndSwap(false, true) {

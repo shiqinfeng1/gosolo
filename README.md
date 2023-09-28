@@ -20,25 +20,25 @@
 
 ## 配置
 
+- 配置数据保存在`appBuilder`的`NodeConfig.BaseConfig`中
+- `appBuilder`中的flags字段解析和保存命令行参数
+配置初始化的过程:
+1. 项目自带一个默认配置文件 `default-config.yml` ，该文件以静态资源嵌入的方式存储在全局变量中，在`init`时读取默认配置文件 `default-config.yml` 的数据到viper
+2. 代码中自带一个`DefaultBaseConfig`，设置了`BaseConfig`的默认值
+3. 构造appBuilder时，读取`DefaultBaseConfig`, 然后通过opts选项模式修改默认值， 更新后保存默认配置到`appBuilder.NodeConfig.BaseConfig`
+4. 设置应用需要的额外参数， 这些参数是各个应用特有的，不是通用的
+5. 把yaml中的默认配置读取到flags中
+6. 把`appBuilder.NodeConfig.BaseConfig`中的字段和命令行参数关联起来
+7. 解析命令行参数
+8. 检查命令行参数是否带有`--config-file`，如果有，那么把`--config-file`指定的配置读入到viper，覆盖默认的yaml配置，并更新`BaseConfig.YamlConfig`；如果没有，也把命令行参数绑定到viper的字段中，并设置去掉前缀的参数名称
 
-### 默认配置
 
-`congfig` 包负责处理默认配置和命令行参数的解析。
-项目自带一个默认配置文件 `default-config.yml` ，该文件以静态资源嵌入的方式存储在全局变量中。
-在`init`时读取默认配置文件 `default-config.yml` 的数据到viper
+## 生产环境性能剖析器 pprof
 
-### 通用配置
 
-- `BaseConfig` 保存公共通用配置和通用的基础功能
-  - 配置字段可以全局定义， 也可以各个模块自定义
-  - 配置来源：
-   1. 命令行参数；
-   2. yaml文件；
-  - 
-## app构造器 `AppBuilder`
+## 运行指标观测 prometheus
 
-- app构造器实现了 `NodeBuilder` 接口，该接口在`node_builder.go`中定义
-- 
+## 链路跟踪 otel
 
 # 文件目录说明
 

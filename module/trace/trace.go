@@ -55,6 +55,7 @@ func NewTracer(
 	error,
 ) {
 	ctx := context.TODO()
+	// 创建一个资源。资源属性是serviceName, 允许从环境变量配置资源
 	res, err := resource.New(
 		ctx,
 		resource.WithAttributes(

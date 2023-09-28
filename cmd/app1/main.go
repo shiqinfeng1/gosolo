@@ -8,10 +8,15 @@ import (
 )
 
 func main() {
+	var (
+		config1 uint //额外的配置参数
+	)
 	// 生产一个节点构造器的实例
 	nodeBuilder := cmd.App("app1")
 	nodeBuilder.ExtraFlags(func(flags *pflag.FlagSet) {
-
+		// 应用需要的额外参数
+		flags.UintVar(&config1, "config1", 50_000,
+			"maximum number of transactions in the memory pool")
 	})
 
 	// 初始化

@@ -17,6 +17,7 @@ func WithNextSampler(sampler zerolog.Sampler) BurstSamplerOption {
 
 // BurstSampler returns a zerolog.BurstSampler with the provided burst and interval.
 // Logs emitted beyond the burst limit are dropped
+// 突发流量采样器
 func BurstSampler(burst uint32, interval time.Duration, opts ...BurstSamplerOption) *zerolog.BurstSampler {
 	s := &zerolog.BurstSampler{
 		Burst:  burst,
