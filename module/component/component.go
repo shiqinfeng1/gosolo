@@ -140,6 +140,7 @@ func NoopWorker(ctx irrecoverable.SignalerContext, ready ReadyFunc) {
 }
 
 // ComponentManagerBuilder provides a mechanism for building a ComponentManager
+// 组件管理器工厂，可以build一个组件管理器
 type ComponentManagerBuilder interface {
 	// AddWorker adds a worker routine for the ComponentManager
 	AddWorker(ComponentWorker) ComponentManagerBuilder
@@ -162,6 +163,7 @@ func NewComponentManagerBuilder() ComponentManagerBuilder {
 // All worker functions will be run in parallel when the ComponentManager is started.
 // Note: AddWorker is not concurrency-safe, and should only be called on an individual builder
 // within a single goroutine.
+// 一个组件下有多个worker，所有worker会并行运行
 func (c *componentManagerBuilderImpl) AddWorker(worker ComponentWorker) ComponentManagerBuilder {
 	c.workers = append(c.workers, worker)
 	return c
@@ -171,6 +173,7 @@ func (c *componentManagerBuilderImpl) AddWorker(worker ComponentWorker) Componen
 // Build may be called multiple times to create multiple individual ComponentManagers. This will
 // result in the worker routines being called multiple times. If this is unsafe, do not call it
 // more than once!
+// 生产一个组件管理器
 func (c *componentManagerBuilderImpl) Build() *ComponentManager {
 	return &ComponentManager{
 		started:        atomic.NewBool(false),
@@ -182,6 +185,7 @@ func (c *componentManagerBuilderImpl) Build() *ComponentManager {
 	}
 }
 
+// 组件管理器本身也是一个组件
 var _ Component = (*ComponentManager)(nil)
 
 // ComponentManager is used to manage the worker routines of a Component, and implements all of the
