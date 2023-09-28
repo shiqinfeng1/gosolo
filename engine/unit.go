@@ -29,6 +29,7 @@ func NewUnit() *Unit {
 	return unit
 }
 
+// wg加1
 func (u *Unit) admit() bool {
 	u.admitLock.Lock()
 	defer u.admitLock.Unlock()
@@ -43,6 +44,7 @@ func (u *Unit) admit() bool {
 	return true
 }
 
+// 通过ctx取消执行
 func (u *Unit) stopAdmitting() {
 	u.admitLock.Lock()
 	defer u.admitLock.Unlock()
@@ -53,6 +55,7 @@ func (u *Unit) stopAdmitting() {
 // Do synchronously executes the input function f unless the unit has shut down.
 // It returns the result of f. If f is executed, the unit will not shut down
 // until after f returns.
+// 同步执行f函数，执行前wg加1 ，执行完成后，wg减1
 func (u *Unit) Do(f func() error) error {
 	if !u.admit() {
 		return nil
@@ -64,6 +67,7 @@ func (u *Unit) Do(f func() error) error {
 
 // Launch asynchronously executes the input function unless the unit has shut
 // down. If f is executed, the unit will not shut down until after f returns.
+// 异步执行输入的f函数，执行前wg加1 ，执行完成后，wg减1
 func (u *Unit) Launch(f func()) {
 	if !u.admit() {
 		return
@@ -77,6 +81,7 @@ func (u *Unit) Launch(f func()) {
 
 // LaunchAfter asynchronously executes the input function after a certain delay
 // unless the unit has shut down.
+// 在延时delay后，异步执行输入的f函数，执行前wg加1 ，执行完成后，wg减1
 func (u *Unit) LaunchAfter(delay time.Duration, f func()) {
 	u.Launch(func() {
 		select {
@@ -91,11 +96,13 @@ func (u *Unit) LaunchAfter(delay time.Duration, f func()) {
 // LaunchPeriodically asynchronously executes the input function on `interval` periods
 // unless the unit has shut down.
 // If f is executed, the unit will not shut down until after f returns.
+// 延时后以指定的interval间隔，异步执行输入的f函数，执行前wg加1 ，执行完成后，wg减1
 func (u *Unit) LaunchPeriodically(f func(), interval time.Duration, delay time.Duration) {
 	u.Launch(func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
+		// 在等待延时期间，可能会停止运行
 		select {
 		case <-u.ctx.Done():
 			return
@@ -144,6 +151,7 @@ func (u *Unit) Ctx() context.Context {
 }
 
 // Quit returns a channel that is closed when the unit begins to shut down.
+// ctx控制退出的channel
 func (u *Unit) Quit() <-chan struct{} {
 	return u.ctx.Done()
 }
@@ -154,6 +162,7 @@ func (u *Unit) Quit() <-chan struct{} {
 //
 // The engine using the unit is responsible for defining these action functions
 // as required.
+// 先取消ctx，停止函数f的运行，然后执行action，最后等待函数f全部完成，全部完成后，关闭done的channel
 func (u *Unit) Done(actions ...func()) <-chan struct{} {
 	done := make(chan struct{})
 	go func() {

@@ -153,6 +153,7 @@ type componentManagerBuilderImpl struct {
 }
 
 // NewComponentManagerBuilder returns a new ComponentManagerBuilder
+// 组件管理器构造器
 func NewComponentManagerBuilder() ComponentManagerBuilder {
 	return &componentManagerBuilderImpl{}
 }
