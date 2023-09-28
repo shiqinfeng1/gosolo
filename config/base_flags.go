@@ -28,12 +28,17 @@ func AllFlagNames() []string {
 //	*YamlConfig: yaml配置，保存在yaml文件中
 //
 // Note: in subsequent PR's all flag initialization for Flow node should be moved to this func.
-func InitializePFlagSet(flags *pflag.FlagSet, baseConfig *BaseConfig, config *YamlConfig) {
-	flags.String(configFileFlagName, "", "配置文件的路径")
-	flags.Bool(networkingConnectionPruning, config.Infra1Config.NetworkConnectionPruning, "enabling connection trimming")
-	flags.Int(receivedMessageCacheSize, config.Infra2Config.ReceivedMessageCacheSize, "enabling connection trimming")
+func InitializePFlagSet(flags *pflag.FlagSet, baseConfig *BaseConfig) error {
 
 	defaultConfig := DefaultBaseConfig()
+	defaultAppConfig, err := DefaultYamlConfig()
+	if err != nil {
+		return err
+	}
+
+	flags.String(configFileFlagName, "", "配置文件的路径")
+	flags.Bool(networkingConnectionPruning, defaultAppConfig.Infra1Config.NetworkConnectionPruning, "enabling connection trimming")
+	flags.Int(receivedMessageCacheSize, defaultAppConfig.Infra2Config.ReceivedMessageCacheSize, "enabling connection trimming")
 
 	// bind configuration parameters
 	flags.StringVar(&baseConfig.config1, "nodeid", defaultConfig.config1, "identity of our node")

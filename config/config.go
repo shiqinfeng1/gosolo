@@ -51,16 +51,16 @@ func (fc *YamlConfig) Validate() error {
 	return nil
 }
 
-// DefaultConfig initializes the flow configuration. All default values for the Flow
+// DefaultYamlConfig initializes the flow configuration. All default values for the Flow
 // configuration are stored in the default-config.yml file. These values can be overridden
-// by node operators by setting the corresponding cli flag. DefaultConfig should be called
+// by node operators by setting the corresponding cli flag. DefaultYamlConfig should be called
 // before any pflags are parsed, this will allow the configuration to initialize with defaults
 // from default-config.yml.
 // Returns:
 //
 //	*YamlConfig: an instance of the network configuration fully initialized to the default values set in the config file
 //	error: if there is any error encountered while initializing the configuration, all errors are considered irrecoverable.
-func DefaultConfig() (*YamlConfig, error) {
+func DefaultYamlConfig() (*YamlConfig, error) {
 	var yamlConfig YamlConfig
 	err := Unmarshall(&yamlConfig)
 	if err != nil {

@@ -77,16 +77,14 @@ type AppBuilder struct {
 
 var _ NodeBuilder = (*AppBuilder)(nil)
 
-// 读如默认配置和命令行参数，并都映射到FlagSet中
+// 默认配置和命令行参数，并都映射到FlagSet中
 func (ab *AppBuilder) BaseFlags() {
-	defaultAppConfig, err := config.DefaultConfig()
+
+	// initialize pflag set for Flow node
+	err := config.InitializePFlagSet(ab.flags, &ab.config)
 	if err != nil {
 		ab.Logger.Fatal().Err(err).Msg("failed to initialize flow config")
 	}
-
-	// initialize pflag set for Flow node
-	config.InitializePFlagSet(ab.flags, &ab.config, defaultAppConfig)
-
 }
 
 func (ab *AppBuilder) EnqueueMetricsServerInit() {
@@ -160,6 +158,9 @@ func (ab *AppBuilder) ParseAndPrintFlags() error {
 	// parse configuration parameters
 	pflag.Parse()
 
+	// 在这之前已经通过BaseFlags把yaml配置文件中的配置加载到flags中了
+	// 如果用户自定义yaml配置， 那么重新加载配置，
+	// 把yaml的配置解析到YamlConfig结构中
 	configOverride, err := config.BindPFlags(&ab.config.YamlConfig, ab.flags)
 	if err != nil {
 		return err
@@ -173,6 +174,7 @@ func (ab *AppBuilder) ParseAndPrintFlags() error {
 		ab.Logger.Fatal().Err(err).Msg("flow configuration validation failed")
 	}
 
+	// 打印日志
 	info := ab.Logger.Info()
 
 	noPrint := config.LogConfig(info, ab.flags)
@@ -195,6 +197,7 @@ func (ab *AppBuilder) initLogger() error {
 	zerolog.TimestampFunc = func() time.Time { return time.Now().UTC() }
 
 	// Drop all log events that exceed this rate limit
+	// 默认如果每秒生成超过2000个日志，就丢弃
 	throttledSampler := logging.BurstSampler(ab.config.DebugLogLimit, time.Second)
 
 	log := ab.Logger.With().
@@ -206,7 +209,7 @@ func (ab *AppBuilder) initLogger() error {
 			DebugSampler: throttledSampler,
 		})
 
-	log.Info().Msgf("flow %s node starting up", ab.config.NodeRole)
+	log.Info().Msgf("%s node starting up", ab.config.NodeRole)
 
 	// parse config log level and apply to logger
 	lvl, err := zerolog.ParseLevel(strings.ToLower(ab.config.Level))
@@ -390,8 +393,8 @@ func (ab *AppBuilder) handleModules() error {
 // when the node starts.
 // It uses signal channels to ensure that components are started serially.
 func (ab *AppBuilder) handleComponents() error {
-	// The parent/started channels are used to enforce serial startup.
-	// - parent is the started channel of the previous component.
+	// The parent/started channels are used to enforce serial startup.  保证串行启动执行
+	// - parent is the started channel of the previous component.   parent保存前一个组件启动完成的通知channel， 但组件启动完成，前一个组件就会关闭该channel
 	// - when a component is ready, it closes its started channel by calling the provided callback.
 	// Components wait for their parent channel to close before starting, this ensures they start
 	// up serially, even though the ComponentManager will launch the goroutines in parallel.
@@ -406,7 +409,7 @@ func (ab *AppBuilder) handleComponents() error {
 	// Run all components
 	for _, f := range ab.components {
 		// Components with explicit dependencies are not started serially
-		if f.dependencies != nil {
+		if f.dependencies != nil { // 组件如果有依赖，就作为异步组件运行
 			asyncComponents = append(asyncComponents, f)
 			continue
 		}
@@ -724,6 +727,7 @@ func WithLogLevel(level string) Option {
 func App(role string, opts ...Option) *AppBuilder {
 	config := config.DefaultBaseConfig()
 	config.NodeRole = role
+	// 选项模式修改参数默认值
 	for _, opt := range opts {
 		opt(config)
 	}
@@ -757,18 +761,22 @@ func (ab *AppBuilder) Initialize() error {
 		return err
 	}
 
+	//  启动一个运行状态观测服务
 	if ab.config.MetricsEnabled {
 		ab.EnqueueMetricsServerInit()
+		// 启动服务后，注册需要观测的指标
 		// if err := ab.RegisterBadgerMetrics(); err != nil {
 		// 	return err
 		// }
 	}
 
+	// 这个tracer在后面初始化上
 	ab.EnqueueTracer()
 
 	return nil
 }
 
+// 注册命令行的命令
 func (ab *AppBuilder) RegisterDefaultAdminCommands() {
 	ab.AdminCommand("set-log-level", func(config *NodeConfig) commands.AdminCommand {
 		return &common.SetLogLevelCommand{}
@@ -783,6 +791,7 @@ func (ab *AppBuilder) RegisterDefaultAdminCommands() {
 	})
 }
 
+// 工厂模式， 生产一个Node
 func (ab *AppBuilder) Build() (Node, error) {
 	// Run the prestart initialization. This includes anything that should be done before
 	// starting the components.
@@ -800,11 +809,11 @@ func (ab *AppBuilder) Build() (Node, error) {
 }
 
 func (ab *AppBuilder) onStart() error {
-
+	// 使用zerolog
 	if err := ab.initLogger(); err != nil {
 		return err
 	}
-
+	//
 	if err := ab.initMetrics(); err != nil {
 		return err
 	}

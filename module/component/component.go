@@ -209,13 +209,14 @@ type ComponentManager struct {
 func (c *ComponentManager) Start(parent irrecoverable.SignalerContext) {
 	// Make sure we only start once. atomically check if started is false then set it to true.
 	// If it was not false, panic
+	// 只能启动一次
 	if !c.started.CompareAndSwap(false, true) {
 		panic(module.ErrMultipleStartup)
 	}
-
+	// ctx继承自傅ctx， 支持取消
 	ctx, cancel := context.WithCancel(parent)
 	signalerCtx, errChan := irrecoverable.WithSignaler(ctx)
-
+	// 如果ctx被取消，那么将触发ComponentManager的shutdownSignal
 	go c.waitForShutdownSignal(ctx.Done())
 
 	// launch goroutine to propagate irrecoverable error
@@ -225,11 +226,11 @@ func (c *ComponentManager) Start(parent irrecoverable.SignalerContext) {
 		// goroutine and the parent's are scheduled. If the parent is scheduled first, any errors
 		// thrown within workers would not have propagated, and it would only receive the done signal
 		defer func() {
-			cancel() // shutdown all workers
+			cancel() // shutdown all workers   自动取消所有的worker， 取消后发出shutdownSignal
 			// wait for shutdown signal before signalling the component is done
 			// this guarantees that ShutdownSignal is closed before Done
-			<-c.shutdownSignal
-			<-c.workersDone
+			<-c.shutdownSignal // 确保shutdownSignal已发出
+			<-c.workersDone    // 等待worker停止
 			close(c.done)
 		}()
 

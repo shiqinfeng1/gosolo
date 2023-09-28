@@ -19,8 +19,8 @@ type BaseConfig struct {
 	datadir string
 	config3 uint32
 
-	TracerSensitivity uint
-	TracerEnabled     bool
+	TracerSensitivity uint // 跟踪灵敏度
+	TracerEnabled     bool // 跟踪使能
 	MetricsPort       uint
 	DebugLogLimit     uint32
 	Level             string
@@ -57,7 +57,7 @@ func DefaultBaseConfig() *BaseConfig {
 		BindAddr:          NotSet,
 		MetricsEnabled:    true,
 		AdminMaxMsgSize:   DefaultMaxMsgSize,
-		AdminAddr:         NotSet,
+		AdminAddr:         "localhost:9002",
 		AdminCert:         NotSet,
 		AdminKey:          NotSet,
 		AdminClientCAs:    NotSet,
