@@ -221,7 +221,7 @@ func (c *ComponentManager) Start(parent irrecoverable.SignalerContext) {
 	// ctx继承自傅ctx， 支持取消
 	ctx, cancel := context.WithCancel(parent)
 	signalerCtx, errChan := irrecoverable.WithSignaler(ctx)
-	// 如果ctx被取消，那么将触发ComponentManager的shutdownSignal
+	// 如果ctx被取消，那么将触发ComponentManager的 shutdownSignal
 	go c.waitForShutdownSignal(ctx.Done())
 
 	// launch goroutine to propagate irrecoverable error
@@ -240,10 +240,11 @@ func (c *ComponentManager) Start(parent irrecoverable.SignalerContext) {
 		}()
 
 		// wait until the workersDone channel is closed or an irrecoverable error is encountered
+		// 等待不可逆的err发生，或者组件被关闭
 		if err := util.WaitError(errChan, c.workersDone); err != nil {
 			// propagate the error directly to the parent because a failure in a worker routine
 			// is considered irrecoverable
-			parent.Throw(err)
+			parent.Throw(err) //把err通过channel抛给parent， 然后退出当前routine
 		}
 	}()
 
@@ -255,11 +256,12 @@ func (c *ComponentManager) Start(parent irrecoverable.SignalerContext) {
 	// launch workers
 	for _, worker := range c.workers {
 		worker := worker
+		// 一个routine执行一个worker
 		go func() {
 			defer workersDone.Done()
 			var readyOnce sync.Once
-			worker(signalerCtx, func() {
-				readyOnce.Do(func() {
+			worker(signalerCtx, func() { // 使用公共的通知上下文
+				readyOnce.Do(func() { // 只能被执行一次
 					workersReady.Done()
 				})
 			})

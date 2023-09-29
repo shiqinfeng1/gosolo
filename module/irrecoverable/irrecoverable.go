@@ -32,7 +32,7 @@ func NewSignaler() (*Signaler, <-chan error) {
 // errors as unhandled.
 // 抛出异常到channel， 并关闭channel
 func (s *Signaler) Throw(err error) {
-	defer runtime.Goexit()
+	defer runtime.Goexit() // 退出当前的goroutine，不影响其他rooutine
 	if s.errThrown.CompareAndSwap(false, true) {
 		s.errChan <- err
 		close(s.errChan)

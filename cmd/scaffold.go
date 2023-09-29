@@ -800,7 +800,7 @@ func (ab *AppBuilder) Build() (Node, error) {
 	}
 
 	return NewNode(
-		ab.componentBuilder.Build(),
+		ab.componentBuilder.Build(), // 生成一个组件管理器
 		ab.NodeConfig,
 		ab.Logger,
 		ab.postShutdown,
@@ -858,7 +858,7 @@ func (ab *AppBuilder) postShutdown() error {
 			errs = multierror.Append(errs, err)
 		}
 	}
-	ab.Logger.Info().Msg("database has been closed")
+	ab.Logger.Info().Msg("app has been closed")
 	return errs.ErrorOrNil()
 }
 

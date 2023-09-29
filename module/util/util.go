@@ -134,7 +134,7 @@ func WaitError(errChan <-chan error, done <-chan struct{}) error {
 	case err := <-errChan:
 		return err
 	case <-done:
-		select {
+		select { // 在发生done时，如果同时产生了err，那么，还需要返回该err
 		case err := <-errChan:
 			return err
 		default:

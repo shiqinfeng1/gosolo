@@ -12,14 +12,17 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// 节点也作为一个组件实现
 var _ component.Component = (*FlowNodeImp)(nil)
 
+// node也作为一个组件
 type Node interface {
 	component.Component
 
-	// Run initiates all common components (logger, database, protocol state etc.)
+	// Run initiates all common components (logger, database etc.)
 	// then starts each component. It also sets up a channel to gracefully shut
 	// down each component if a SIGINT is received.
+	// Run负责初始化所有一般的组件(日志，数据库等)，然后启动各个组件，同时需要捕获中断信号，并优雅地关闭各个组件
 	Run()
 }
 
@@ -35,6 +38,7 @@ type FlowNodeImp struct {
 }
 
 // NewNode returns a new node instance
+// 逐渐管理器作为组件component传入，
 func NewNode(component component.Component, cfg *NodeConfig, logger zerolog.Logger, cleanup func() error, handleFatal func(error)) Node {
 	return &FlowNodeImp{
 		Component:    component,
@@ -49,6 +53,7 @@ func NewNode(component component.Component, cfg *NodeConfig, logger zerolog.Logg
 // which point it gracefully shuts down.
 // Any unhandled irrecoverable errors thrown in child components will propagate up to here and
 // result in a fatal error.
+// 运行节点，即运行节点的所有组件
 func (node *FlowNodeImp) Run() {
 	// Cancelling this context notifies all child components that it's time to shutdown
 	ctx, cancel := context.WithCancel(context.Background())
@@ -91,6 +96,7 @@ func (node *FlowNodeImp) run(ctx context.Context, shutdown context.CancelFunc) e
 	node.Start(signalerCtx)
 
 	// Log when all components have been started
+	// 在routine中等待节点启动完成，完成后无往外处理，只输出打印
 	go func() {
 		select {
 		case <-node.Ready():
